@@ -2,7 +2,12 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="MORTI STYLE">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icon-180.png">
 <title>MORTI///STYLE</title>
 <meta name="theme-color" content="#0b0b0b">
 <meta name="description" content="MORTI///STYLE - Fashion, shoes, watches, eyewear and more.">
@@ -35,5 +40,6 @@
 <script src="admin.js"></script>
 <script src="cloud.js"></script>
 <script src="main.js"></script>
+<script>if("serviceWorker"in navigator&&location.protocol.indexOf("http")===0)window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").catch(function(){})});</script>
 </body>
 </html>
