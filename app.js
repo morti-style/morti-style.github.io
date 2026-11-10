@@ -301,7 +301,7 @@
     $('#mm').innerHTML = '<div class="mmh"><span>' + t('menu') + '</span><button class="ibtn" data-act="menu" aria-label="Close">' + ic('close') + '</button></div><div class="mmb">' +
       '<a href="#/new">' + t('new') + '</a>' + d.categories.map(function (c) { return '<a href="#/c/' + esc(c.id) + '">' + esc(nm(c)) + '</a>'; }).join('') + '<a class="sale" href="#/sale">' + t('sale') + '</a>' +
       '<b class="mt">' + t('topBrands') + '</b>' + d.brands.map(function (b) { return '<a href="#/b/' + esc(b.id) + '">' + esc(b.name) + '</a>'; }).join('') +
-      '<b class="mt">Language</b><div class="langs">' + [['fa', 'فارسی'], ['de', 'Deutsch'], ['en', 'English']].map(function (l) { return '<button type="button" data-act="setlang" data-v="' + l[0] + '"' + (MS.lang === l[0] ? ' class="on"' : '') + '>' + l[1] + '</button>'; }).join('') + '</div></div>';
+      '<b class="mt">Language</b><div class="langs">' + [['fa', 'فارسی'], ['de', 'Deutsch'], ['en', 'English']].map(function (l) { return '<button type="button" data-act="setlang" data-v="' + l[0] + '"' + (MS.lang === l[0] ? ' class="on"' : '') + '>' + l[1] + '</button>'; }).join('') + '</div><a class="mut" href="#/admin" style="margin-top:18px;font-size:13px">' + t('admin') + '</a></div>';
   }
   function tabs() {
     var h = location.hash || '#/';

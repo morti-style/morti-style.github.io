@@ -8,8 +8,8 @@
   if (!on) return;
 
   var base = C.url.replace(/\/+$/, '');
-  function sess() { try { return JSON.parse(sessionStorage.getItem(SK) || 'null'); } catch (e) { return null; } }
-  function setSess(s) { try { s ? sessionStorage.setItem(SK, JSON.stringify(s)) : sessionStorage.removeItem(SK); } catch (e) {} }
+  function sess() { try { return JSON.parse(localStorage.getItem(SK) || 'null'); } catch (e) { return null; } }
+  function setSess(s) { try { s ? localStorage.setItem(SK, JSON.stringify(s)) : localStorage.removeItem(SK); } catch (e) {} }
   function req(method, path, body, extra) {
     var s = sess();
     var h = { apikey: C.key, 'Content-Type': 'application/json', Authorization: 'Bearer ' + (s ? s.access_token : C.key) };

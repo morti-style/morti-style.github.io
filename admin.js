@@ -6,8 +6,8 @@
   var $ = function (s, r) { return (r || document).querySelector(s); };
 
   var authMem = false;
-  function authed() { if (MS.cloud && MS.cloud.on) return MS.cloud.isAdmin(); try { return sessionStorage.getItem('ms_admin') === '1'; } catch (e) { return authMem; } }
-  function setAuth(v) { authMem = v; try { if (v) sessionStorage.setItem('ms_admin', '1'); else sessionStorage.removeItem('ms_admin'); } catch (e) { } }
+  function authed() { if (MS.cloud && MS.cloud.on) return MS.cloud.isAdmin(); try { return localStorage.getItem('ms_admin') === '1'; } catch (e) { return authMem; } }
+  function setAuth(v) { authMem = v; try { if (v) localStorage.setItem('ms_admin', '1'); else localStorage.removeItem('ms_admin'); } catch (e) { } }
 
   var draft = { id: '', images: [] };
   var STATUS = ['pending', 'paid', 'shipped', 'done', 'cancelled'];
