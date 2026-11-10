@@ -448,7 +448,7 @@
         items: T.L.map(function (l) { return { id: l.p.id, name: l.p.name, price: eff(l.p), qty: l.qty, size: l.size || '', color: l.color || '' }; })
       };
       T.L.forEach(function (l) { l.p.stock = Math.max(0, l.p.stock - l.qty); });
-      D().orders.unshift(o); S.save();
+      D().orders.unshift(o); S.save(); if (MS.cloud && MS.cloud.on) MS.cloud.order(o);
       Cart.items = []; Cart.save();
       location.hash = '#/order/' + o.id;
     }, 1100);

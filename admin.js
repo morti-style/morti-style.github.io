@@ -6,7 +6,7 @@
   var $ = function (s, r) { return (r || document).querySelector(s); };
 
   var authMem = false;
-  function authed() { try { return sessionStorage.getItem('ms_admin') === '1'; } catch (e) { return authMem; } }
+  function authed() { if (MS.cloud && MS.cloud.on) return MS.cloud.isAdmin(); try { return sessionStorage.getItem('ms_admin') === '1'; } catch (e) { return authMem; } }
   function setAuth(v) { authMem = v; try { if (v) sessionStorage.setItem('ms_admin', '1'); else sessionStorage.removeItem('ms_admin'); } catch (e) { } }
 
   var draft = { id: '', images: [] };
@@ -20,9 +20,9 @@
   // ---------- login + layout
   function loginView() {
     return '<div class="login"><div class="lc">' + MS.emblem(84) + '<h1>' + t('a_login') + '</h1>' +
-      '<form data-form="alogin">' + lbl('a_password', '<input class="in" type="password" name="pw" autocomplete="current-password" autofocus>') +
+      '<form data-form="alogin">' + ((MS.cloud && MS.cloud.on) ? lbl('E-Mail', '<input class="in" type="email" name="email" autocomplete="username" autofocus>').replace('<span>E-Mail</span>','<span>E-Mail</span>') : '') + lbl('a_password', '<input class="in" type="password" name="pw" autocomplete="current-password" autofocus>') +
       '<p class="err" id="lerr" role="alert"></p><button class="btn full" type="submit">' + t('a_signin') + '</button></form>' +
-      (D().settings.pwDefault ? '<p class="hint">' + t('a_demoPw') + '</p>' : '') + '<p><a class="lnk" href="#/">' + t('a_toShop') + '</a></p></div></div>';
+      (D().settings.pwDefault && !(MS.cloud && MS.cloud.on) ? '<p class="hint">' + t('a_demoPw') + '</p>' : '') + '<p><a class="lnk" href="#/">' + t('a_toShop') + '</a></p></div></div>';
   }
   function layout(sec, body) {
     var nav = [['dash', 'a_dash'], ['products', 'a_products'], ['cats', 'a_cats'], ['brands', 'a_brands'], ['orders', 'a_orders'], ['settings', 'a_settings']].map(function (x) {
@@ -166,7 +166,7 @@
   var armed = {};
   function refreshImgs() { var g = $('#imgs'); if (g) g.innerHTML = imgGrid(); }
 
-  acts.alogout = function () { setAuth(false); location.hash = '#/'; MS.render(); };
+  acts.alogout = function () { if (MS.cloud && MS.cloud.on) MS.cloud.logout(); setAuth(false); location.hash = '#/'; MS.render(); };
   acts.pickcam = function () { var i = $('#fcam'); if (i) i.click(); };
   acts.pickgal = function () { var i = $('#fgal'); if (i) i.click(); };
   acts.imgl = function (el) { var i = +el.dataset.i; if (i > 0) { var a = draft.images; var x = a[i]; a[i] = a[i - 1]; a[i - 1] = x; refreshImgs(); } };
@@ -235,7 +235,11 @@
 
   // ---------- forms
   forms.alogin = function (f) {
-    var pw = String(new FormData(f).get('pw') || '');
+    var fdl = new FormData(f), pw = String(fdl.get('pw') || '');
+    if (MS.cloud && MS.cloud.on) {
+      MS.cloud.login(String(fdl.get('email') || '').trim(), pw).then(function () { MS.render(); }, function () { var e = $('#lerr'); if (e) e.textContent = t('a_wrong'); });
+      return;
+    }
     if (pw && pw === String(D().settings.pw)) { setAuth(true); MS.render(); }
     else { var e = $('#lerr'); if (e) e.textContent = t('a_wrong'); }
   };
