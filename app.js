@@ -59,12 +59,26 @@
   function lines() {
     return Cart.items.map(function (i) { var p = prodOf(i.pid); return p ? { pid: i.pid, size: i.size, color: i.color, qty: i.qty, p: p } : null; }).filter(Boolean);
   }
+  var Coupon = { code: S.load('coupon', '') };
+  function couponCalc(code, sub) {
+    code = String(code || '').trim().toUpperCase();
+    if (!code) return { none: true, disc: 0 };
+    var c = (D().coupons || []).filter(function (x) { return String(x.code).toUpperCase() === code; })[0];
+    if (!c || !c.on) return { err: 'couponBad', disc: 0 };
+    if (c.expires) { var e = new Date(c.expires + 'T23:59:59'); if (!isNaN(e) && e < new Date()) return { err: 'couponExp', disc: 0 }; }
+    if (Number(c.min) > sub) return { err: 'couponMin', disc: 0 };
+    var d = c.type === 'fix' ? Number(c.value) : sub * Number(c.value) / 100;
+    d = Math.min(sub, Math.max(0, Math.round((d || 0) * 100) / 100));
+    return { ok: true, disc: d, code: c.code };
+  }
   function totals() {
     var L = lines();
     var sub = L.reduce(function (a, l) { return a + eff(l.p) * l.qty; }, 0);
     var s = D().settings;
-    var ship = (!sub || sub >= Number(s.freeFrom)) ? 0 : Number(s.shipFee);
-    return { L: L, sub: sub, ship: ship, total: sub + ship };
+    var cp = couponCalc(Coupon.code, sub);
+    var net = sub - cp.disc;
+    var ship = (!sub || net >= Number(s.freeFrom)) ? 0 : Number(s.shipFee);
+    return { L: L, sub: sub, disc: cp.disc, coupon: cp, ship: ship, total: net + ship };
   }
   MS.totals = totals;
 
@@ -145,6 +159,47 @@
   // ---------- views
   function vNF() { return '<div class="wrap pg"><p class="empty">' + t('notFound') + '</p><p class="c"><a class="btn" href="#/">' + t('home') + '</a></p></div>'; }
 
+  function safeLink(l) { l = String(l || ''); return (l.indexOf('#/') === 0 || /^https:\/\//.test(l)) ? l : '#/'; }
+  function safeImg(u) { u = String(u || ''); return (/^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]+$/.test(u) || /^https:\/\/[^\s"'()<>]+$/.test(u)) ? u : ''; }
+  var slTimer = null;
+  function vSlider() {
+    var B = (D().banners || []).filter(function (b) { return b.on !== false; });
+    if (!B.length) return '';
+    var slides = B.map(function (b, i) {
+      var im = safeImg(b.img);
+      return '<div class="sld' + (i ? '' : ' on') + (im ? ' has' : '') + '"' + (im ? ' style="background-image:url(' + im + ')"' : '') + '>' + (im ? '' : '<span class="sle" aria-hidden="true">' + MS.emblem(220) + '</span>') +
+        '<div class="slc"><h2>' + esc(ml(b.title)) + '</h2>' + (ml(b.text) ? '<p>' + esc(ml(b.text)) + '</p>' : '') + (ml(b.btn) ? '<a class="btn" href="' + esc(safeLink(b.link)) + '">' + esc(ml(b.btn)) + '</a>' : '') + '</div></div>';
+    }).join('');
+    var nav = B.length > 1 ? '<button type="button" class="slb prev" data-act="slide" data-d="-1" aria-label="Prev">' + ic('left', 22) + '</button><button type="button" class="slb next" data-act="slide" data-d="1" aria-label="Next">' + ic('right', 22) + '</button><div class="sldots">' + B.map(function (b, i) { return '<button type="button" class="' + (i ? '' : 'on') + '" data-act="slide" data-i="' + i + '" aria-label="' + (i + 1) + '"></button>'; }).join('') + '</div>' : '';
+    return '<section class="wrap slw"><div class="sl" id="sl">' + slides + nav + '</div></section>';
+  }
+  function slideTo(i, user) {
+    var sl = $('#sl'); if (!sl) return;
+    var a = $$('.sld', sl), n = a.length; if (n < 2) return;
+    i = (i % n + n) % n;
+    a.forEach(function (e, k) { e.classList.toggle('on', k === i); });
+    $$('.sldots button', sl).forEach(function (e, k) { e.classList.toggle('on', k === i); });
+    sl.dataset.i = i;
+    if (user) initSlider();
+  }
+  function initSlider() {
+    clearInterval(slTimer); slTimer = null;
+    var sl = $('#sl'); if (!sl || $$('.sld', sl).length < 2) return;
+    slTimer = setInterval(function () { if (!document.getElementById('sl')) { clearInterval(slTimer); return; } slideTo((+sl.dataset.i || 0) + 1); }, 5500);
+    if (sl.dataset.bound) return; sl.dataset.bound = 1;
+    var x0 = null;
+    sl.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; }, { passive: true });
+    sl.addEventListener('touchend', function (e) {
+      if (x0 == null) return; var dx = e.changedTouches[0].clientX - x0; x0 = null;
+      if (Math.abs(dx) > 40) slideTo((+sl.dataset.i || 0) + ((dx < 0) === (MS.lang !== 'fa') ? 1 : -1), true);
+    }, { passive: true });
+  }
+
+  function newsletterBox() {
+    return '<div class="nl"><div><b>' + t('nlTitle') + '</b><span class="mut">' + t('nlSub') + '</span></div>' +
+      '<form data-form="newsletter" novalidate id="nlf"><div class="nlr"><input class="in" type="email" name="email" autocomplete="email" placeholder="' + esc(t('email')) + '"><button class="btn" type="submit">' + t('nlJoin') + '</button></div>' +
+      '<label class="nlc"><input type="checkbox" name="consent"><span>' + t('nlConsent') + ' <a href="#/page/privacy" class="lnk">' + t('privacy') + '</a></span></label><p class="nlm" id="nlm" role="status"></p></form></div>';
+  }
   function vHome() {
     var d = D(), s = d.settings;
     var ht = (ml(s.heroTitle) || '').split('|');
@@ -158,7 +213,7 @@
     var brands = d.brands.map(function (b) {
       return '<a class="bt" href="#/b/' + esc(b.id) + '" style="--c:' + safeColor(b.color) + '"><span class="bm">' + esc(mono(b.name)) + '</span><b>' + esc(b.name) + '</b><small>' + esc(b.tagline || '') + '</small></a>';
     }).join('');
-    return '<section class="hero wrap"><div class="hl"><span class="kick">' + t('newSeason') + '</span>' +
+    return vSlider() + '<section class="hero wrap"><div class="hl"><span class="kick">' + t('newSeason') + '</span>' +
       '<h1>' + esc(ht[0] || '') + (ht[1] ? '<br><span class="gold">' + esc(ht[1]) + '</span>' : '') + '</h1>' +
       '<p class="lead">' + esc(ml(s.heroSub)) + '</p>' +
       '<div class="cta"><a class="btn" href="#/new">' + t('shopNow') + '</a>' + (sales.length ? '<a class="btn ghost" href="#/sale">' + t('viewSale') + '</a>' : '') + '</div></div>' +
@@ -242,8 +297,23 @@
     }).join('');
     return '<div class="wrap pg">' + pageHead(t('cart')) + '<div class="two"><div class="cls">' + rows + '</div>' + summary(T, true) + '</div></div>';
   }
+  function sumRows(T, items) {
+    return (items ? T.L.map(function (l) { return '<div class="sr"><span>' + esc(l.p.name) + ' × ' + l.qty + '</span><b>' + money(eff(l.p) * l.qty) + '</b></div>'; }).join('') : '<div class="sr"><span>' + t('subtotal') + '</span><b>' + money(T.sub) + '</b></div>') +
+      (T.disc ? '<div class="sr disc"><span>' + t('discount') + ' (' + esc(T.coupon.code) + ')</span><b>−' + money(T.disc) + '</b></div>' : '') +
+      '<div class="sr"><span>' + t('shipping') + '</span><b>' + (T.ship ? money(T.ship) : t('free')) + '</b></div><div class="sr tot"><span>' + t('total') + '</span><b>' + money(T.total) + '</b></div>';
+  }
+  function couponBox(T) {
+    var msg = T.coupon.ok ? '<small class="cok">✓ ' + t('couponOk') + ' <button type="button" class="lnk" data-act="clearcoupon">' + t('remove') + '</button></small>' : (T.coupon.err ? '<small class="cerr">' + t(T.coupon.err) + '</small>' : '');
+    return '<div class="cpn"><input class="in" id="cpin" type="text" autocomplete="off" autocapitalize="characters" placeholder="' + esc(t('coupon')) + '" value="' + esc(Coupon.code || '') + '"><button type="button" class="btn ghost" data-act="applycoupon">' + t('couponApply') + '</button></div>' + msg;
+  }
   function summary(T, btn) {
-    return '<aside class="sum"><div class="sr"><span>' + t('subtotal') + '</span><b>' + money(T.sub) + '</b></div><div class="sr"><span>' + t('shipping') + '</span><b>' + (T.ship ? money(T.ship) : t('free')) + '</b></div><div class="sr tot"><span>' + t('total') + '</span><b>' + money(T.total) + '</b></div>' + (btn ? '<a class="btn full" href="#/checkout">' + t('checkout') + '</a>' : '') + '</aside>';
+    return '<aside class="sum"><div id="sumrows">' + sumRows(T, false) + '</div><div id="cpbox">' + couponBox(T) + '</div>' + (btn ? '<a class="btn full" href="#/checkout">' + t('checkout') + '</a>' : '') + '</aside>';
+  }
+  function refreshSum(items) {
+    var T = totals(), a = $('#sumrows'), b = $('#cpbox'), pb = $('#paybtn');
+    if (a) a.innerHTML = sumRows(T, items); if (b) b.innerHTML = couponBox(T);
+    if (pb) pb.textContent = t('payNow') + ' · ' + money(T.total);
+    return T;
   }
 
   function field(name, label, type, extra, req) {
@@ -261,8 +331,7 @@
       '<label class="pmo"><input type="radio" name="pay" value="cod" data-change="paym"><span>' + t('payCod') + '</span></label></div>' +
       '<div id="cardbox" class="fg"><p class="hint">' + t('testHint') + '</p>' + field('card', 'cardNo', 'text', 'inputmode="numeric" autocomplete="off" placeholder="4242 4242 4242 4242" maxlength="23"') + field('exp', 'expiry', 'text', 'inputmode="numeric" autocomplete="off" placeholder="12/30" maxlength="7"') + field('cvc', 'cvc', 'text', 'inputmode="numeric" autocomplete="off" placeholder="123" maxlength="4"') + '</div>' +
       '<p class="err" id="cerr" role="alert"></p></div>' +
-      '<aside class="sum">' + T.L.map(function (l) { return '<div class="sr"><span>' + esc(l.p.name) + ' × ' + l.qty + '</span><b>' + money(eff(l.p) * l.qty) + '</b></div>'; }).join('') +
-      '<div class="sr"><span>' + t('shipping') + '</span><b>' + (T.ship ? money(T.ship) : t('free')) + '</b></div><div class="sr tot"><span>' + t('total') + '</span><b>' + money(T.total) + '</b></div>' +
+      '<aside class="sum"><div id="sumrows">' + sumRows(T, true) + '</div><div id="cpbox">' + couponBox(T) + '</div>' +
       '<button class="btn full" type="submit" id="paybtn">' + t('payNow') + ' · ' + money(T.total) + '</button></aside></form></div>';
   }
 
@@ -310,7 +379,7 @@
   }
   function footer() {
     var d = D();
-    $('#ftr').innerHTML = '<div class="wrap fw"><div class="fb">' + MS.wordmark(20) + '<span class="mut">© ' + new Date().getFullYear() + ' MORTI///STYLE · ' + t('rights') + '</span></div>' +
+    $('#ftr').innerHTML = '<div class="wrap">' + newsletterBox() + '</div><div class="wrap fw"><div class="fb">' + MS.wordmark(20) + '<span class="mut">© ' + new Date().getFullYear() + ' MORTI///STYLE · ' + t('rights') + '</span></div>' +
       '<div class="fc"><b>' + t('shop') + '</b>' + d.categories.slice(0, 4).map(function (c) { return '<a href="#/c/' + esc(c.id) + '">' + esc(nm(c)) + '</a>'; }).join('') + '</div>' +
       '<div class="fc"><b>' + t('help') + '</b><a href="#/page/shipping">' + t('shippingP') + '</a><a href="#/page/returns">' + t('returnsP') + '</a><a href="#/cart">' + t('cart') + '</a></div>' +
       '<div class="fc"><b>' + t('legal') + '</b><a href="#/page/imprint">' + t('imprint') + '</a><a href="#/page/privacy">' + t('privacy') + '</a><a href="#/page/terms">' + t('terms') + '</a><a href="#/admin">' + t('admin') + '</a></div></div>';
@@ -349,7 +418,7 @@
       }
     } catch (e) { if (window.console) console.error(e); html = vNF(); }
     $('#app').innerHTML = html;
-    header(); menuPanel(); tabs(); footer();
+    header(); menuPanel(); tabs(); footer(); initSlider();
     document.documentElement.lang = MS.lang;
     document.documentElement.dir = MS.lang === 'fa' ? 'rtl' : 'ltr';
     window.scrollTo(0, 0);
@@ -360,6 +429,23 @@
   // ---------- actions
   var acts = MS.acts = {};
   var forms = MS.forms = {};
+  acts.slide = function (el) { var sl = $('#sl'); if (!sl) return; var cur = +sl.dataset.i || 0; slideTo(el.dataset.i != null ? +el.dataset.i : cur + (+el.dataset.d), true); };
+  forms.newsletter = function (f) {
+    var fd = new FormData(f), em = String(fd.get('email') || '').trim().toLowerCase(), m = $('#nlm');
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em) || !fd.get('consent')) { if (m) { m.className = 'nlm bad'; m.textContent = t('nlNeed'); } return; }
+    var done = function () {
+      var c = (D().coupons || []).filter(function (x) { return x.code === 'WELCOME10' && x.on; })[0];
+      if (m) { m.className = 'nlm ok'; m.textContent = t('nlThanks') + (c ? ' ' + t('coupon') + ': WELCOME10' : ''); }
+      f.reset();
+    };
+    if (MS.cloud && MS.cloud.on) { MS.cloud.subscribe(em).then(done, function () { if (m) { m.className = 'nlm bad'; m.textContent = t('nlNeed'); } }); }
+    else {
+      var d = D(); d.subscribers = d.subscribers || [];
+      if (!d.subscribers.some(function (x) { return x.email === em; })) d.subscribers.unshift({ email: em, created_at: new Date().toISOString() });
+      S.save(); done();
+    }
+  };
+
   var changes = MS.changes = {};
 
   acts.fav = function (el) {
@@ -405,6 +491,13 @@
     it.qty = Math.max(1, Math.min(p ? Math.max(1, p.stock) : 99, it.qty + Number(el.dataset.d)));
     Cart.save(); render();
   };
+  acts.applycoupon = function () {
+    var i = $('#cpin'); if (!i) return;
+    Coupon.code = String(i.value || '').trim().toUpperCase(); S.store('coupon', Coupon.code);
+    var T = refreshSum(!!$('#paybtn'));
+    if (Coupon.code && T.coupon.err) toast(t(T.coupon.err), true); else if (T.coupon.ok) toast(t('couponOk'));
+  };
+  acts.clearcoupon = function () { Coupon.code = ''; S.store('coupon', ''); refreshSum(!!$('#paybtn')); };
   acts.cd = function (el) { Cart.items.splice(Number(el.dataset.k), 1); Cart.save(); render(); };
   acts.menu = function () {
     var m = $('#mm'); m.hidden = !m.hidden; document.body.classList.toggle('lock', !m.hidden);
@@ -443,13 +536,13 @@
     setTimeout(function () {
       var o = {
         id: 'MS-' + Date.now().toString(36).toUpperCase(), date: Date.now(), status: fd.pay === 'cod' ? 'pending' : 'paid',
-        pay: fd.pay + (last4 ? ' ****' + last4 : ''), sub: T.sub, ship: T.ship, total: T.total, currency: D().settings.currency,
+        pay: fd.pay + (last4 ? ' ****' + last4 : ''), sub: T.sub, discount: T.disc || 0, coupon: T.disc ? T.coupon.code : '', ship: T.ship, total: T.total, currency: D().settings.currency,
         customer: { name: fd.name, email: fd.email, phone: fd.phone || '', address: fd.address, city: fd.city, zip: fd.zip, country: fd.country },
         items: T.L.map(function (l) { return { id: l.p.id, name: l.p.name, price: eff(l.p), qty: l.qty, size: l.size || '', color: l.color || '' }; })
       };
       T.L.forEach(function (l) { l.p.stock = Math.max(0, l.p.stock - l.qty); });
       D().orders.unshift(o); S.save(); if (MS.cloud && MS.cloud.on) MS.cloud.order(o);
-      Cart.items = []; Cart.save();
+      Cart.items = []; Cart.save(); Coupon.code = ''; S.store('coupon', '');
       location.hash = '#/order/' + o.id;
     }, 1100);
   };
@@ -473,7 +566,7 @@
       if (!el) return;
       var h = changes[el.dataset.change]; if (h) h(el, e);
     });
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMenu(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeMenu(); if (e.key === 'Enter' && e.target && e.target.id === 'cpin') { e.preventDefault(); acts.applycoupon(); } });
     window.addEventListener('hashchange', render);
   };
 })(window.MS);

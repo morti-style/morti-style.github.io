@@ -25,7 +25,7 @@
       (D().settings.pwDefault && !(MS.cloud && MS.cloud.on) ? '<p class="hint">' + t('a_demoPw') + '</p>' : '') + '<p><a class="lnk" href="#/">' + t('a_toShop') + '</a></p></div></div>';
   }
   function layout(sec, body) {
-    var nav = [['dash', 'a_dash'], ['products', 'a_products'], ['cats', 'a_cats'], ['brands', 'a_brands'], ['orders', 'a_orders'], ['settings', 'a_settings']].map(function (x) {
+    var nav = [['dash', 'a_dash'], ['products', 'a_products'], ['cats', 'a_cats'], ['brands', 'a_brands'], ['orders', 'a_orders'], ['banners', 'a_banners'], ['coupons', 'a_coupons'], ['subs', 'a_subs'], ['settings', 'a_settings']].map(function (x) {
       return '<a class="an' + (sec === x[0] ? ' on' : '') + '" href="#/admin/' + x[0] + '">' + t(x[1]) + '</a>';
     }).join('');
     return '<div class="adm"><aside class="as"><div class="al">' + MS.emblem(34) + '<b>ADMIN</b></div><nav>' + nav + '</nav>' +
@@ -120,6 +120,52 @@
     return '<h1>' + t('a_brands') + '</h1><details class="dt add"><summary>' + ic('plus', 18) + ' ' + t('a_newBrand') + '</summary>' + brandForm(null) + '</details>' + rows;
   }
 
+
+  // ---------- banners / coupons / newsletter
+  var bdraft = { img: '' };
+  function rin(name, text, val, extra, type) { return '<label class="fl"><span>' + esc(text) + '</span><input class="in" name="' + name + '" type="' + (type || 'text') + '" value="' + esc(val == null ? '' : val) + '" ' + (extra || '') + '></label>'; }
+  function bannerForm(b) {
+    var isNew = !b;
+    b = b || { id: '', on: true, img: '', title: {}, text: {}, btn: {}, link: '#/new' };
+    var im = isNew ? bdraft.img : b.img, L = ['en', 'fa', 'de'], f = '';
+    L.forEach(function (l) { f += rin('title_' + l, t('a_title') + ' (' + l.toUpperCase() + ')', (b.title || {})[l]); });
+    L.forEach(function (l) { f += rin('text_' + l, t('a_text') + ' (' + l.toUpperCase() + ')', (b.text || {})[l]); });
+    L.forEach(function (l) { f += rin('btn_' + l, t('a_btn') + ' (' + l.toUpperCase() + ')', (b.btn || {})[l]); });
+    var sid = isNew ? 'new' : b.id;
+    return '<form class="af fg" data-form="saveBanner" data-id="' + esc(b.id) + '" novalidate>' +
+      '<div class="wide"><span class="mut">' + t('a_bannerImg') + '</span><div class="bthumb" id="bth-' + esc(sid) + '"' + (im && /^(data:image|https:)/.test(im) ? ' style="background-image:url(' + esc(im) + ')"' : '') + '></div>' +
+      '<div class="pick"><button type="button" class="btn ghost" data-act="pickbimg" data-id="' + esc(sid) + '">' + ic('image', 18) + ' ' + t('a_gallery') + '</button><button type="button" class="btn ghost" data-act="rmbimg" data-id="' + esc(sid) + '">' + t('a_removeImg') + '</button></div>' +
+      '<input type="file" accept="image/*" hidden id="bf-' + esc(sid) + '" data-change="bannerimg" data-id="' + esc(sid) + '"></div>' + f +
+      rin('link', t('a_link'), b.link, 'dir="ltr"') + '<label class="fl chk"><input type="checkbox" name="on"' + (b.on !== false ? ' checked' : '') + '><span>' + t('a_active') + '</span></label>' +
+      '<div class="pick wide"><button class="btn" type="submit">' + t('a_save') + '</button>' +
+      (isNew ? '' : '<button type="button" class="btn ghost" data-act="bmove" data-id="' + esc(b.id) + '" data-d="-1">↑</button><button type="button" class="btn ghost" data-act="bmove" data-id="' + esc(b.id) + '" data-d="1">↓</button><button type="button" class="btn ghost danger" data-act="adel" data-kind="banner" data-id="' + esc(b.id) + '">' + t('a_delete') + '</button>') + '</div></form>';
+  }
+  function vBanners() {
+    var rows = (D().banners || []).map(function (b) {
+      return '<details class="dt"><summary><b>' + esc(H.ml(b.title) || '—') + '</b>' + (b.on === false ? ' <span class="mut">(off)</span>' : '') + '</summary>' + bannerForm(b) + '</details>';
+    }).join('');
+    return '<h1>' + t('a_banners') + '</h1><details class="dt add"><summary>' + ic('plus', 18) + ' ' + t('a_newBanner') + '</summary>' + bannerForm(null) + '</details>' + (rows || '<p class="mut">' + t('a_noItems') + '</p>');
+  }
+  function couponForm(c) {
+    var isNew = !c; c = c || { code: '', type: 'pct', value: 10, min: 0, expires: '', on: true };
+    return '<form class="af fg" data-form="saveCoupon" data-id="' + esc(c.code) + '" novalidate>' + inp('code', 'a_code', c.code, 'autocapitalize="characters" dir="ltr"') +
+      lbl('a_type', '<select class="in" name="type"><option value="pct"' + (c.type !== 'fix' ? ' selected' : '') + '>' + t('a_pct') + '</option><option value="fix"' + (c.type === 'fix' ? ' selected' : '') + '>' + t('a_fix') + '</option></select>') +
+      inp('value', 'a_value', c.value, 'inputmode="decimal"') + inp('min', 'a_min', c.min || 0, 'inputmode="decimal"') + inp('expires', 'a_expires', c.expires || '', '', 'date') +
+      '<label class="fl chk"><input type="checkbox" name="on"' + (c.on !== false ? ' checked' : '') + '><span>' + t('a_active') + '</span></label>' +
+      '<div class="pick wide"><button class="btn" type="submit">' + t('a_save') + '</button>' + (isNew ? '' : '<button type="button" class="btn ghost danger" data-act="adel" data-kind="coupon" data-id="' + esc(c.code) + '">' + t('a_delete') + '</button>') + '</div></form>';
+  }
+  function vCoupons() {
+    var rows = (D().coupons || []).map(function (c) {
+      return '<details class="dt"><summary><b>' + esc(c.code) + '</b> <span class="mut">' + (c.type === 'fix' ? H.money(c.value) : H.num(c.value) + '%') + (c.on === false ? ' (off)' : '') + '</span></summary>' + couponForm(c) + '</details>';
+    }).join('');
+    return '<h1>' + t('a_coupons') + '</h1><details class="dt add"><summary>' + ic('plus', 18) + ' ' + t('a_newCoupon') + '</summary>' + couponForm(null) + '</details>' + (rows || '<p class="mut">' + t('a_noItems') + '</p>');
+  }
+  function vSubs() {
+    var L = D().subscribers || [];
+    return '<h1>' + t('a_subs') + ' (' + L.length + ')</h1><div class="pick"><button class="btn ghost" data-act="subcsv">' + t('a_csv') + '</button></div><div class="subl">' +
+      (L.map(function (x) { return '<div><span>' + esc(x.email) + '</span><span class="mut">' + esc(String(x.created_at || '').slice(0, 10)) + '</span></div>'; }).join('') || '<p class="mut">' + t('a_noSubs') + '</p>') + '</div>';
+  }
+
   function orderRow(o) {
     var c = o.customer || {};
     var opts = STATUS.map(function (s) { return '<option value="' + s + '"' + (o.status === s ? ' selected' : '') + '>' + t(SKEY[s]) + '</option>'; }).join('');
@@ -154,6 +200,9 @@
         case 'cats': body = vCats(); break;
         case 'brands': body = vBrands(); break;
         case 'orders': body = vOrders(); break;
+        case 'banners': body = vBanners(); break;
+        case 'coupons': body = vCoupons(); break;
+        case 'subs': body = vSubs(); break;
         case 'settings': body = vSettings(); break;
         default: body = '<p class="empty">' + t('notFound') + '</p>';
       }
@@ -187,6 +236,8 @@
     else if (el.dataset.kind === 'cat') {
       if (d.products.some(function (p) { return p.cat === id; })) return MS.toast(t('a_catInUse'), true);
       d.categories = d.categories.filter(function (c) { return c.id !== id; });
+    } else if (el.dataset.kind === 'banner') { d.banners = (d.banners || []).filter(function (b) { return b.id !== id; });
+    } else if (el.dataset.kind === 'coupon') { d.coupons = (d.coupons || []).filter(function (c) { return c.code !== id; });
     } else if (el.dataset.kind === 'brand') {
       if (d.products.some(function (p) { return p.brand === id; })) return MS.toast(t('a_catInUse'), true);
       d.brands = d.brands.filter(function (b) { return b.id !== id; });
@@ -260,6 +311,53 @@
     p.sizes = list(fd.sizes); p.colors = list(fd.colors); p.featured = !!f.elements.featured.checked; p.images = draft.images.slice();
     var ok = S.save(); saved(ok);
     if (ok !== false) location.hash = '#/admin/products';
+  };
+
+  acts.pickbimg = function (el) { var i = document.getElementById('bf-' + el.dataset.id); if (i) i.click(); };
+  acts.rmbimg = function (el) {
+    var id = el.dataset.id, th = document.getElementById('bth-' + id);
+    if (id === 'new') bdraft.img = ''; else { var b = (D().banners || []).filter(function (x) { return x.id === id; })[0]; if (b) { b.img = ''; saved(S.save()); } }
+    if (th) th.style.backgroundImage = '';
+  };
+  acts.bmove = function (el) {
+    var a = D().banners, i = a.findIndex(function (x) { return x.id === el.dataset.id; }), j = i + (+el.dataset.d);
+    if (i < 0 || j < 0 || j >= a.length) return;
+    var x = a[i]; a[i] = a[j]; a[j] = x; saved(S.save()); MS.render();
+  };
+  acts.subcsv = function () {
+    var csv = 'email,date\n' + (D().subscribers || []).map(function (x) { return '"' + String(x.email).replace(/"/g, '') + '","' + String(x.created_at || '').slice(0, 10) + '"'; }).join('\n');
+    var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = 'newsletter.csv';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
+  };
+  changes.bannerimg = function (el) {
+    var f = el.files && el.files[0]; if (!f) return; var id = el.dataset.id;
+    MS.compress(f, 1400, 0.8).then(function (src) {
+      if (id === 'new') bdraft.img = src; else { var b = (D().banners || []).filter(function (x) { return x.id === id; })[0]; if (b) { b.img = src; saved(S.save()); } }
+      var th = document.getElementById('bth-' + id); if (th) th.style.backgroundImage = 'url(' + src + ')';
+    }, function () { MS.toast(t('a_tooBig'), true); });
+    el.value = '';
+  };
+  forms.saveBanner = function (f) {
+    var fd = new FormData(f), d = D(), id = f.dataset.id, b = id ? (d.banners || []).filter(function (x) { return x.id === id; })[0] : null;
+    var g = function (k) { return String(fd.get(k) || '').trim(); };
+    var title = { en: g('title_en'), fa: g('title_fa'), de: g('title_de') };
+    if (!title.en && !title.fa && !title.de) return MS.toast(t('a_needName'), true);
+    title.en = title.en || title.fa || title.de; title.fa = title.fa || title.en; title.de = title.de || title.en;
+    if (!b) { b = { id: S.uid(), img: bdraft.img }; d.banners = d.banners || []; d.banners.push(b); bdraft.img = ''; }
+    b.title = title; b.text = { en: g('text_en'), fa: g('text_fa') || g('text_en'), de: g('text_de') || g('text_en') };
+    b.btn = { en: g('btn_en'), fa: g('btn_fa') || g('btn_en'), de: g('btn_de') || g('btn_en') };
+    b.link = g('link') || '#/'; b.on = !!fd.get('on');
+    saved(S.save()); MS.render();
+  };
+  forms.saveCoupon = function (f) {
+    var fd = new FormData(f), d = D(); d.coupons = d.coupons || [];
+    var code = String(fd.get('code') || '').trim().toUpperCase().replace(/[^A-Z0-9_-]/g, ''), val = parseFloat(String(fd.get('value')).replace(',', '.'));
+    if (!code || !(val > 0)) return MS.toast(t('a_needCode'), true);
+    var old = f.dataset.id, c = d.coupons.filter(function (x) { return x.code === (old || code); })[0];
+    if (!c) { c = { code: code }; d.coupons.push(c); } else c.code = code;
+    c.type = fd.get('type') === 'fix' ? 'fix' : 'pct'; c.value = c.type === 'pct' ? Math.min(100, val) : val;
+    c.min = Math.max(0, parseFloat(String(fd.get('min')).replace(',', '.')) || 0); c.expires = String(fd.get('expires') || ''); c.on = !!fd.get('on');
+    saved(S.save()); MS.render();
   };
   forms.saveCat = function (f) {
     var fd = {}; new FormData(f).forEach(function (v, k) { fd[k] = String(v).trim(); });

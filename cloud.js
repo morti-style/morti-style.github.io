@@ -39,7 +39,7 @@
 
   function publicData() {
     var d = JSON.parse(JSON.stringify(S.data));
-    delete d.orders; if (d.settings) { delete d.settings.pw; delete d.settings.pwDefault; }
+    delete d.orders; delete d.subscribers; if (d.settings) { delete d.settings.pw; delete d.settings.pwDefault; }
     return d;
   }
   // Shop-Daten + (als Admin) Bestellungen laden
@@ -47,10 +47,10 @@
     return req('GET', '/rest/v1/shop_data?id=eq.main&select=data').then(function (rows) {
       if (rows && rows[0] && rows[0].data) {
         var cur = S.data, d = rows[0].data;
-        d.orders = cur.orders || []; d.settings = Object.assign({}, d.settings, { pw: cur.settings.pw, pwDefault: false });
-        S.data = d; S.store('data', d);
+        d.orders = cur.orders || []; d.subscribers = cur.subscribers || []; d.settings = Object.assign({}, d.settings, { pw: cur.settings.pw, pwDefault: false });
+        S.data = S.migrate(d); S.store('data', S.data);
       }
-      if (withOrders && sess()) return req('GET', '/rest/v1/orders?select=data&order=created_at.desc').then(function (r) { S.data.orders = (r || []).map(function (x) { return x.data; }); S.store('data', S.data); });
+      if (withOrders && sess()) return req('GET', '/rest/v1/orders?select=data&order=created_at.desc').then(function (r) { S.data.orders = (r || []).map(function (x) { return x.data; }); S.store('data', S.data); return req('GET', '/rest/v1/subscribers?select=email,created_at&order=created_at.desc').then(function (sb) { S.data.subscribers = sb || []; }, function () {}); });
     });
   };
   // Admin: Änderungen hochladen (mit kurzer Verzögerung)
@@ -71,6 +71,11 @@
   cloud.order = function (o) {
     return req('POST', '/rest/v1/orders', [{ id: o.id, data: o }], { Prefer: 'return=minimal' }).catch(function () {});
   };
+
+  cloud.subscribe = function (email) {
+    return req('POST', '/rest/v1/subscribers', [{ email: email }], { Prefer: 'return=minimal,resolution=ignore-duplicates' });
+  };
+  cloud.unsub = function (email) { return req('DELETE', '/rest/v1/subscribers?email=eq.' + encodeURIComponent(email)); };
 
   var orig = S.save;
   S.save = function () { var r = orig.apply(S, arguments); cloud.push(); return r; };

@@ -82,12 +82,26 @@
     };
   }
 
+
+  function migrate(d) {
+    if (!Array.isArray(d.banners)) d.banners = [
+      { id: 'b1', on: true, img: '', title: { en: 'New season. New style.', fa: 'فصل جدید. استایل جدید.', de: 'Neue Saison. Neuer Style.' }, text: { en: 'Discover the latest arrivals.', fa: 'تازه‌ترین کالاها را ببین.', de: 'Entdecke die neuesten Styles.' }, btn: { en: 'Shop now', fa: 'خرید کن', de: 'Jetzt shoppen' }, link: '#/new' },
+      { id: 'b2', on: true, img: '', title: { en: 'Watches up to 30% off', fa: 'ساعت‌ها تا ۳۰٪ تخفیف', de: 'Uhren bis zu 30 % Rabatt' }, text: { en: 'Limited time only.', fa: 'فقط برای مدت محدود.', de: 'Nur für kurze Zeit.' }, btn: { en: 'See offers', fa: 'دیدن پیشنهادها', de: 'Angebote ansehen' }, link: '#/sale' },
+      { id: 'b3', on: true, img: '', title: { en: 'First order: 10% off', fa: 'اولین خرید: ۱۰٪ تخفیف', de: 'Erste Bestellung: 10 % Rabatt' }, text: { en: 'Use code WELCOME10 at checkout.', fa: 'کد WELCOME10 را در پرداخت وارد کن.', de: 'Code WELCOME10 an der Kasse eingeben.' }, btn: { en: 'Start shopping', fa: 'شروع خرید', de: 'Jetzt starten' }, link: '#/new' }
+    ];
+    if (!Array.isArray(d.coupons)) d.coupons = [{ code: 'WELCOME10', type: 'pct', value: 10, min: 0, expires: '', on: true }];
+    if (!Array.isArray(d.subscribers)) d.subscribers = [];
+    if (!Array.isArray(d.orders)) d.orders = [];
+    return d;
+  }
+
   var S = {
+    migrate: migrate,
     load: load, store: store, uid: uid, data: null,
     init: function () {
       var d = load('data', null);
       if (!d || !d.products || !d.categories || !d.brands || !d.settings) { d = seed(); store('data', d); }
-      S.data = d;
+      S.data = migrate(d);
     },
     save: function () { return store('data', S.data); },
     reset: function () { S.data = seed(); return S.save(); }
