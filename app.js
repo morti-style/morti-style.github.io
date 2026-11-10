@@ -167,7 +167,7 @@
     if (!B.length) return '';
     var slides = B.map(function (b, i) {
       var im = safeImg(b.img);
-      return '<div class="sld' + (i ? '' : ' on') + (im ? ' has' : '') + '"' + (im ? ' style="background-image:url(' + im + ')"' : '') + '>' + (im ? '' : '<span class="sle" aria-hidden="true">' + MS.emblem(220) + '</span>') +
+      return '<div class="sld' + (i ? '' : ' on') + (im ? ' has' : '') + '"' + (im ? ' style="background-image:url(' + im + ')"' : '') + '>' + (im ? '' : '<span class="sle" aria-hidden="true">' + MS.wordmark(40) + '</span>') +
         '<div class="slc"><h2>' + esc(ml(b.title)) + '</h2>' + (ml(b.text) ? '<p>' + esc(ml(b.text)) + '</p>' : '') + (ml(b.btn) ? '<a class="btn" href="' + esc(safeLink(b.link)) + '">' + esc(ml(b.btn)) + '</a>' : '') + '</div></div>';
     }).join('');
     var nav = B.length > 1 ? '<button type="button" class="slb prev" data-act="slide" data-d="-1" aria-label="Prev">' + ic('left', 22) + '</button><button type="button" class="slb next" data-act="slide" data-d="1" aria-label="Next">' + ic('right', 22) + '</button><div class="sldots">' + B.map(function (b, i) { return '<button type="button" class="' + (i ? '' : 'on') + '" data-act="slide" data-i="' + i + '" aria-label="' + (i + 1) + '"></button>'; }).join('') + '</div>' : '';
@@ -355,7 +355,7 @@
         (bs.map(function (b) { return '<a href="#/b/' + esc(b.id) + '?c=' + esc(c.id) + '">' + esc(b.name) + '</a>'; }).join('') || '<span class="mut">—</span>') +
         '</div><a class="mall" href="#/c/' + esc(c.id) + '">' + t('viewAll') + ' →</a></div></div>';
     }).join('') + '<a class="nl sale" href="#/sale">' + t('sale') + '</a>';
-    $('#hdr').innerHTML = '<div class="ann" style="color:' + safeColor(s.annColor || '#0b0b0b') + '"><span class="annt">' + esc(ml(s.announce)) + '</span><i class="annf" aria-hidden="true"></i></div>' +
+    $('#hdr').innerHTML = '<div class="ann" data-speed="' + esc(['off', 'slow', 'normal', 'fast'].indexOf(s.annSpeed) > -1 ? s.annSpeed : 'normal') + '"' + (s.annShake !== false ? ' data-shake="1"' : '') + ' style="color:' + safeColor(s.annColor || '#0b0b0b') + '"><span class="annt">' + esc(ml(s.announce)) + '</span><i class="annf" aria-hidden="true"></i></div>' +
       '<div class="hbar wrap"><button class="ibtn onlym" data-act="menu" aria-label="' + t('menu') + '" aria-expanded="false" aria-controls="mm">' + ic('menu') + '</button>' +
       '<a class="logo" href="#/" aria-label="MORTI STYLE">' + MS.emblem(40) + MS.wordmark(20) + '</a>' +
       '<nav class="nav" aria-label="Main">' + nav + '</nav>' +

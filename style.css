@@ -44,7 +44,7 @@ textarea.in{resize:vertical}
 select.in{appearance:auto}
 
 /* announcement + header */
-.ann{position:relative;overflow:hidden;background:var(--gold-g);color:#0b0b0b;text-align:center;font-weight:700;font-size:14px;letter-spacing:1.5px;padding:11px 12px}.annt{position:relative;z-index:1}
+.ann{position:relative;overflow:hidden;background:var(--gold-g);color:#0b0b0b;text-align:center;font-weight:700;font-size:14px;letter-spacing:1.5px;padding:11px 12px}.annt{position:relative;z-index:1;display:inline-block}
 #hdr{position:sticky;top:0;z-index:60;background:rgba(11,11,11,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 .hbar{display:flex;align-items:center;gap:16px;min-height:72px;min-width:0}
 .logo{display:inline-flex;align-items:center;gap:12px;flex:0 1 auto;min-width:0}
@@ -257,7 +257,7 @@ fieldset.box{display:grid;grid-template-columns:1fr;gap:12px}
 .sld.has::before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.72),rgba(0,0,0,.15));z-index:0}
 [dir=rtl] .sld.has::before{background:linear-gradient(270deg,rgba(0,0,0,.72),rgba(0,0,0,.15))}
 .sle{position:absolute;inset-inline-end:6%;top:50%;transform:translateY(-50%);opacity:.9;z-index:0}
-.slc{position:relative;z-index:1;padding:36px 48px 52px;max-width:560px;display:flex;flex-direction:column;align-items:flex-start;gap:12px}
+.slc{position:relative;z-index:1;padding:36px 68px 52px;max-width:560px;display:flex;flex-direction:column;align-items:flex-start;gap:12px}
 .slc h2{font-size:clamp(22px,4.2vw,38px);line-height:1.15;margin:0}
 .slc p{margin:0;color:var(--mut);font-size:15px}
 .slb{position:absolute;top:50%;transform:translateY(-50%);z-index:3;width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:rgba(0,0,0,.45);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer}
@@ -292,3 +292,11 @@ fieldset.box{display:grid;grid-template-columns:1fr;gap:12px}
 @keyframes annhue{to{filter:hue-rotate(360deg)}}
 @media (prefers-reduced-motion:reduce){.annf{animation:none;display:none}}
 .fl.chk{flex-direction:row;align-items:center}
+
+.ann[data-speed=slow] .annf{animation-duration:8s,16s}
+.ann[data-speed=fast] .annf{animation-duration:3s,6s}
+.ann[data-speed=off] .annf{display:none}
+.ann[data-shake] .annt{animation:annshake 6s ease-in-out infinite}
+@keyframes annshake{0%,84%,100%{transform:none}86%{transform:translateX(-4px) rotate(-.6deg)}88%{transform:translateX(4px) rotate(.6deg)}90%{transform:translateX(-4px) rotate(-.6deg)}92%{transform:translateX(3px) rotate(.4deg)}94%{transform:translateX(-2px)}96%{transform:translateX(2px)}98%{transform:none}}
+@media (prefers-reduced-motion:reduce){.ann[data-shake] .annt{animation:none}}
+.sle{opacity:1}
