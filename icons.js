@@ -1,0 +1,64 @@
+(function (MS) {
+  'use strict';
+  // 64x64 line icons for categories
+  MS.ICONS = {
+    clothing: '<path d="M22 10 L8 18 L14 30 L20 26 L20 54 L44 54 L44 26 L50 30 L56 18 L42 10 Q32 18 22 10 Z"/>',
+    shoes: '<path d="M6 46 L6 34 Q20 32 28 22 L34 27 Q40 32 52 34 Q62 36 62 44 L62 48 L6 48 Z"/><line x1="6" y1="42" x2="62" y2="42"/>',
+    watches: '<rect x="26" y="3" width="12" height="11"/><rect x="26" y="50" width="12" height="11"/><circle cx="32" cy="32" r="16"/><path d="M32 32 L32 22 M32 32 L40 36"/>',
+    eyewear: '<circle cx="18" cy="34" r="11"/><circle cx="46" cy="34" r="11"/><path d="M29 33 Q32 29 35 33 M7 32 L2 28 M57 32 L62 28"/>',
+    belts: '<rect x="3" y="26" width="58" height="12" rx="2"/><rect x="24" y="21" width="16" height="22" rx="2"/><circle cx="12" cy="32" r="1.5"/><circle cx="50" cy="32" r="1.5"/>',
+    bags: '<rect x="10" y="24" width="44" height="32" rx="4"/><path d="M22 24 Q22 8 32 8 Q42 8 42 24"/>'
+  };
+  MS.iconKeys = Object.keys(MS.ICONS);
+
+  // generated placeholder picture (data URI) used until a real photo is uploaded
+  MS.art = function (icon, seed) {
+    var h = [42, 38, 46, 34, 50, 30][seed % 6];
+    var svg = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400"><defs>' +
+      '<radialGradient id="r" cx="50%" cy="40%" r="75%"><stop offset="0" stop-color="hsl(' + h + ',35%,22%)"/><stop offset="1" stop-color="#0d0d0d"/></radialGradient>' +
+      '<linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6e08a"/><stop offset=".5" stop-color="#d4af37"/><stop offset="1" stop-color="#8a6a14"/></linearGradient></defs>' +
+      '<rect width="400" height="400" fill="url(#r)"/>' +
+      '<g transform="translate(72 72) scale(4)" stroke="url(#g)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">' +
+      (MS.ICONS[icon] || MS.ICONS.clothing) + '</g></svg>';
+    return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+  };
+
+  // logo pieces (gradients #gold / #disc are defined once in index.html)
+  MS.emblem = function (s) {
+    return '<svg width="' + s + '" height="' + s + '" viewBox="0 0 230 230" role="img" aria-label="MORTI STYLE">' +
+      '<circle cx="115" cy="115" r="108" fill="url(#disc)" stroke="url(#gold)" stroke-width="6"/>' +
+      '<circle cx="115" cy="115" r="96" fill="none" stroke="url(#gold)" stroke-width="1.5" stroke-dasharray="2 6" stroke-linecap="round"/>' +
+      '<polyline points="64,160 64,70 115,128 166,70 166,160" fill="none" stroke="url(#gold)" stroke-width="14" stroke-linejoin="miter"/>' +
+      '<g stroke="#e0364f" stroke-width="6" stroke-linecap="round"><line x1="86" y1="182" x2="98" y2="166"/><line x1="109" y1="182" x2="121" y2="166"/><line x1="132" y1="182" x2="144" y2="166"/></g></svg>';
+  };
+  MS.wordmark = function (fs) {
+    return '<span class="wm" dir="ltr" style="font-size:' + fs + 'px"><span class="wm1">MORTI</span>' +
+      '<svg width="' + Math.round(fs * 0.9) + '" height="' + fs + '" viewBox="0 0 84 76" aria-hidden="true"><g stroke="#e0364f" stroke-width="9"><line x1="14" y1="70" x2="34" y2="6"/><line x1="38" y1="70" x2="58" y2="6"/><line x1="62" y1="70" x2="82" y2="6"/></g></svg>' +
+      '<span class="wm2">STYLE</span></span>';
+  };
+
+  // compress an image file to a small JPEG data URL
+  MS.compress = function (file, max, q) {
+    max = max || 900; q = q || 0.78;
+    return new Promise(function (res, rej) {
+      var fr = new FileReader();
+      fr.onerror = rej;
+      fr.onload = function () {
+        var im = new Image();
+        im.onerror = rej;
+        im.onload = function () {
+          var s = Math.min(1, max / Math.max(im.width, im.height));
+          var w = Math.max(1, Math.round(im.width * s)), h = Math.max(1, Math.round(im.height * s));
+          var c = document.createElement('canvas');
+          c.width = w; c.height = h;
+          var x = c.getContext('2d');
+          x.fillStyle = '#fff'; x.fillRect(0, 0, w, h);
+          x.drawImage(im, 0, 0, w, h);
+          res(c.toDataURL('image/jpeg', q));
+        };
+        im.src = fr.result;
+      };
+      fr.readAsDataURL(file);
+    });
+  };
+})(window.MS);
