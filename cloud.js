@@ -53,6 +53,7 @@
       if (withOrders && sess()) return req('GET', '/rest/v1/orders?select=data&order=created_at.desc').then(function (r) { S.data.orders = (r || []).map(function (x) { return x.data; }); S.store('data', S.data); return req('GET', '/rest/v1/subscribers?select=email,created_at&order=created_at.desc').then(function (sb) { S.data.subscribers = sb || []; }, function () {}); });
     });
   };
+  function stat() { var e = document.getElementById('cstat'); if (e) { e.textContent = MS.t(cloud.state === 'ok' ? 'a_cloudSaved' : cloud.state === 'err' ? 'a_cloudErr' : 'a_cloudOk'); e.style.color = cloud.state === 'ok' ? '#6fcf97' : cloud.state === 'err' ? '#ff6b6b' : ''; } }
   // Admin: Änderungen hochladen (mit kurzer Verzögerung)
   cloud.push = function () {
     if (!sess()) return;
@@ -63,8 +64,8 @@
           var os = (S.data.orders || []).map(function (o) { return { id: o.id, data: o }; });
           if (os.length) return req('POST', '/rest/v1/orders?on_conflict=id', os, { Prefer: 'resolution=merge-duplicates,return=minimal' });
         })
-        .then(function () { MS.toast && MS.toast('☁ ✓'); })
-        .catch(function () { MS.toast && MS.toast('☁ ✗ (Speichern in der Cloud fehlgeschlagen)'); });
+        .then(function () { cloud.state = 'ok'; stat(); MS.toast && MS.toast(MS.t('a_cloudSaved')); })
+        .catch(function () { cloud.state = 'err'; stat(); MS.toast && MS.toast(MS.t('a_cloudErr'), true); });
     }, 600);
   };
   // Kunde: Bestellung senden

@@ -30,7 +30,7 @@
     }).join('');
     return '<div class="adm"><aside class="as"><div class="al">' + MS.emblem(34) + '<b>ADMIN</b></div><nav>' + nav + '</nav>' +
       '<div class="ab"><a class="an" href="#/">← ' + t('a_toShop') + '</a><button class="an" data-act="alogout">' + t('a_logout') + '</button></div></aside>' +
-      '<section class="am">' + body + '<p class="mut note">' + t('a_localNote') + '</p></section></div>';
+      '<section class="am">' + body + ((MS.cloud && MS.cloud.on) ? '<p class="mut note" id="cstat">' + t(MS.cloud.state === 'ok' ? 'a_cloudSaved' : MS.cloud.state === 'err' ? 'a_cloudErr' : 'a_cloudOk') + '</p>' : '<p class="mut note">' + t('a_localNote') + '</p>') + '</section></div>';
   }
 
   // ---------- views
@@ -183,7 +183,8 @@
     var s = D().settings, pg = s.pages || {};
     return '<h1>' + t('a_settings') + '</h1><form class="af" data-form="saveSettings" novalidate>' +
       '<div class="box fg">' + inp('currency', 'a_currency', s.currency) + inp('shipFee', 'a_shipFee', s.shipFee, 'inputmode="decimal"') + inp('freeFrom', 'a_freeFrom', s.freeFrom, 'inputmode="decimal"') + inp('pw', 'a_newPw', '', 'autocomplete="new-password"', 'password') + '</div>' +
-      ml3('announce', 'a_announce', s.announce) + ml3('heroTitle', 'a_hero', s.heroTitle) + ml3('heroSub', 'a_heroSub', s.heroSub) +
+      ml3('announce', 'a_announce', s.announce) +
+      '<div class="box"><label class="fl"><span>' + t('a_annColor') + '</span><input class="in" type="color" name="annColor" id="annc" value="' + H.safeColor(s.annColor || '#0b0b0b') + '"></label><div class="pick">' + ['#0b0b0b', '#ffffff', '#7a0019', '#0a2a6b', '#4a2a00'].map(function (c) { return '<button type="button" class="btn ghost" data-act="annsw" data-c="' + c + '" style="background:' + c + ';min-width:44px;min-height:44px;padding:0" aria-label="' + c + '"></button>'; }).join('') + '</div></div>' + ml3('heroTitle', 'a_hero', s.heroTitle) + ml3('heroSub', 'a_heroSub', s.heroSub) +
       '<fieldset class="box"><legend>' + t('a_pages') + '</legend>' + ['imprint', 'privacy', 'terms', 'shipping', 'returns'].map(function (k) { return '<label class="fl"><span>' + k + '</span><textarea class="in" name="pg_' + k + '" rows="3">' + esc(pg[k] || '') + '</textarea></label>'; }).join('') + '</fieldset>' +
       '<div class="pick"><button class="btn" type="submit">' + t('a_save') + '</button></div></form>' +
       '<div class="box"><h3>' + t('a_backup') + '</h3><div class="pick"><button class="btn ghost" data-act="aexport">' + t('a_export') + '</button><button class="btn ghost" data-act="aimport">' + t('a_import') + '</button><button class="btn ghost danger" data-act="areset">' + t('a_reset') + '</button></div>' +
@@ -313,6 +314,7 @@
     if (ok !== false) location.hash = '#/admin/products';
   };
 
+  acts.annsw = function (el) { var i = document.getElementById('annc'); if (i) i.value = el.dataset.c; };
   acts.pickbimg = function (el) { var i = document.getElementById('bf-' + el.dataset.id); if (i) i.click(); };
   acts.rmbimg = function (el) {
     var id = el.dataset.id, th = document.getElementById('bth-' + id);
@@ -383,6 +385,7 @@
     s.shipFee = Math.max(0, parseFloat(String(fd.shipFee).replace(',', '.')) || 0);
     s.freeFrom = Math.max(0, parseFloat(String(fd.freeFrom).replace(',', '.')) || 0);
     ['announce', 'heroTitle', 'heroSub'].forEach(function (k) { s[k] = { en: fd[k + '_en'], fa: fd[k + '_fa'], de: fd[k + '_de'] }; });
+    s.annColor = H.safeColor(fd.annColor || '#0b0b0b');
     s.pages = s.pages || {};
     ['imprint', 'privacy', 'terms', 'shipping', 'returns'].forEach(function (k) { s.pages[k] = fd['pg_' + k]; });
     if (fd.pw && fd.pw.length >= 6) { s.pw = fd.pw; s.pwDefault = false; }

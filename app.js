@@ -355,7 +355,7 @@
         (bs.map(function (b) { return '<a href="#/b/' + esc(b.id) + '?c=' + esc(c.id) + '">' + esc(b.name) + '</a>'; }).join('') || '<span class="mut">—</span>') +
         '</div><a class="mall" href="#/c/' + esc(c.id) + '">' + t('viewAll') + ' →</a></div></div>';
     }).join('') + '<a class="nl sale" href="#/sale">' + t('sale') + '</a>';
-    $('#hdr').innerHTML = '<div class="ann">' + esc(ml(s.announce)) + '</div>' +
+    $('#hdr').innerHTML = '<div class="ann" style="color:' + safeColor(s.annColor || '#0b0b0b') + '"><span class="annt">' + esc(ml(s.announce)) + '</span><i class="annf" aria-hidden="true"></i></div>' +
       '<div class="hbar wrap"><button class="ibtn onlym" data-act="menu" aria-label="' + t('menu') + '" aria-expanded="false" aria-controls="mm">' + ic('menu') + '</button>' +
       '<a class="logo" href="#/" aria-label="MORTI STYLE">' + MS.emblem(40) + MS.wordmark(20) + '</a>' +
       '<nav class="nav" aria-label="Main">' + nav + '</nav>' +
