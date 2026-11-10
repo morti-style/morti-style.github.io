@@ -19,7 +19,7 @@
 
   // ---------- login + layout
   function loginView() {
-    return '<div class="login"><div class="lc">' + MS.emblem(84) + '<h1>' + t('a_login') + '</h1>' +
+    return '<div class="login"><div class="lc"><div class="lw">' + MS.wordmark(30) + '</div>' + MS.emblem(84) + '<h1>' + t('a_login') + '</h1>' +
       '<form data-form="alogin">' + ((MS.cloud && MS.cloud.on) ? lbl('E-Mail', '<input class="in" type="email" name="email" autocomplete="username" autofocus>').replace('<span>E-Mail</span>','<span>E-Mail</span>') : '') + lbl('a_password', '<input class="in" type="password" name="pw" autocomplete="current-password" autofocus>') +
       '<p class="err" id="lerr" role="alert"></p><button class="btn full" type="submit">' + t('a_signin') + '</button></form>' +
       (D().settings.pwDefault && !(MS.cloud && MS.cloud.on) ? '<p class="hint">' + t('a_demoPw') + '</p>' : '') + '<p><a class="lnk" href="#/">' + t('a_toShop') + '</a></p></div></div>';
