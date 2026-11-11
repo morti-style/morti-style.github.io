@@ -95,6 +95,7 @@ window.MS = window.MS || {};
     ['imprint', 'Imprint', 'اطلاعات قانونی', 'Impressum'],
     ['privacy', 'Privacy', 'حریم خصوصی', 'Datenschutz'],
     ['terms', 'Terms', 'شرایط استفاده', 'AGB'],
+    ['aboutP', 'About us', 'درباره‌ی ما', 'Über uns'],
     ['shippingP', 'Shipping', 'ارسال', 'Versand'],
     ['returnsP', 'Returns', 'بازگشت کالا', 'Rückgabe'],
     ['admin', 'Admin', 'مدیریت', 'Admin'],

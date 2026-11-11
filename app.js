@@ -341,8 +341,8 @@
   }
   function vInfo(k) {
     var pages = D().settings.pages || {};
-    if (!(k in pages)) return vNF();
-    var title = { imprint: t('imprint'), privacy: t('privacy'), terms: t('terms'), shipping: t('shippingP'), returns: t('returnsP') }[k] || k;
+    if (!(k in pages) || (k === 'about' && !pages[k])) return vNF();
+    var title = { imprint: t('imprint'), privacy: t('privacy'), terms: t('terms'), shipping: t('shippingP'), returns: t('returnsP'), about: t('aboutP') }[k] || k;
     return '<div class="wrap pg">' + crumbs([{ n: title }]) + pageHead(title) + '<div class="txt">' + esc(pages[k]).replace(/\n/g, '<br>') + '</div></div>';
   }
 
@@ -381,7 +381,7 @@
     var d = D();
     $('#ftr').innerHTML = '<div class="wrap">' + newsletterBox() + '</div><div class="wrap fw"><div class="fb">' + MS.wordmark(20) + '<span class="mut">© ' + new Date().getFullYear() + ' MORTI///STYLE · ' + t('rights') + '</span></div>' +
       '<div class="fc"><b>' + t('shop') + '</b>' + d.categories.slice(0, 4).map(function (c) { return '<a href="#/c/' + esc(c.id) + '">' + esc(nm(c)) + '</a>'; }).join('') + '</div>' +
-      '<div class="fc"><b>' + t('help') + '</b><a href="#/page/shipping">' + t('shippingP') + '</a><a href="#/page/returns">' + t('returnsP') + '</a><a href="#/cart">' + t('cart') + '</a></div>' +
+      '<div class="fc"><b>' + t('help') + '</b>' + ((d.settings.pages || {}).about ? '<a href="#/page/about">' + t('aboutP') + '</a>' : '') + '<a href="#/page/shipping">' + t('shippingP') + '</a><a href="#/page/returns">' + t('returnsP') + '</a><a href="#/cart">' + t('cart') + '</a></div>' +
       '<div class="fc"><b>' + t('legal') + '</b><a href="#/page/imprint">' + t('imprint') + '</a><a href="#/page/privacy">' + t('privacy') + '</a><a href="#/page/terms">' + t('terms') + '</a><a href="#/admin">' + t('admin') + '</a></div></div>';
   }
   function updateBadges() {

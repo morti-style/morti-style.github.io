@@ -187,7 +187,7 @@
       '<div class="box"><label class="fl"><span>' + t('a_annColor') + '</span><input class="in" type="color" name="annColor" id="annc" value="' + H.safeColor(s.annColor || '#0b0b0b') + '"></label><div class="pick">' + ['#0b0b0b', '#ffffff', '#7a0019', '#0a2a6b', '#4a2a00'].map(function (c) { return '<button type="button" class="btn ghost" data-act="annsw" data-c="' + c + '" style="background:' + c + ';min-width:44px;min-height:44px;padding:0" aria-label="' + c + '"></button>'; }).join('') + '</div>' +
       lbl('a_annSpeed', '<select class="in" name="annSpeed">' + [['off', 'a_spOff'], ['slow', 'a_spSlow'], ['normal', 'a_spNormal'], ['fast', 'a_spFast']].map(function (o) { return '<option value="' + o[0] + '"' + ((s.annSpeed || 'normal') === o[0] ? ' selected' : '') + '>' + t(o[1]) + '</option>'; }).join('') + '</select>') +
       '<label class="fl chk"><input type="checkbox" name="annShake"' + (s.annShake !== false ? ' checked' : '') + '><span>' + t('a_annShake') + '</span></label></div>' + ml3('heroTitle', 'a_hero', s.heroTitle) + ml3('heroSub', 'a_heroSub', s.heroSub) +
-      '<fieldset class="box"><legend>' + t('a_pages') + '</legend>' + ['imprint', 'privacy', 'terms', 'shipping', 'returns'].map(function (k) { return '<label class="fl"><span>' + k + '</span><textarea class="in" name="pg_' + k + '" rows="3">' + esc(pg[k] || '') + '</textarea></label>'; }).join('') + '</fieldset>' +
+      '<fieldset class="box"><legend>' + t('a_pages') + '</legend>' + ['about', 'imprint', 'privacy', 'terms', 'shipping', 'returns'].map(function (k) { return '<label class="fl"><span>' + k + '</span><textarea class="in" name="pg_' + k + '" rows="' + (k === 'about' ? 6 : 3) + '">' + esc(pg[k] || '') + '</textarea></label>'; }).join('') + '</fieldset>' +
       '<div class="pick"><button class="btn" type="submit">' + t('a_save') + '</button></div></form>' +
       '<div class="box"><h3>' + t('a_backup') + '</h3><div class="pick"><button class="btn ghost" data-act="aexport">' + t('a_export') + '</button><button class="btn ghost" data-act="aimport">' + t('a_import') + '</button><button class="btn ghost danger" data-act="areset">' + t('a_reset') + '</button></div>' +
       '<input type="file" id="fimp" accept="application/json,.json" hidden data-change="importfile"></div>';
@@ -391,7 +391,7 @@
     s.annSpeed = ['off', 'slow', 'normal', 'fast'].indexOf(fd.annSpeed) > -1 ? fd.annSpeed : 'normal';
     s.annShake = !!fd.annShake;
     s.pages = s.pages || {};
-    ['imprint', 'privacy', 'terms', 'shipping', 'returns'].forEach(function (k) { s.pages[k] = fd['pg_' + k]; });
+    ['about', 'imprint', 'privacy', 'terms', 'shipping', 'returns'].forEach(function (k) { s.pages[k] = fd['pg_' + k]; });
     if (fd.pw && fd.pw.length >= 6) { s.pw = fd.pw; s.pwDefault = false; }
     saved(S.save()); MS.render();
   };
