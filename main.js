@@ -1,12 +1,1 @@
-(function (MS) {
-  'use strict';
-  MS.boot = function () {
-    MS.Store.init();
-    var l = MS.Store.load('lang', 'fa');
-    MS.lang = (l === 'en' || l === 'de' || l === 'fa') ? l : 'fa';
-    MS.bind();
-    MS.render();
-    if (MS.cloud && MS.cloud.on) MS.cloud.boot();
-  };
-  if (typeof document !== 'undefined' && document.getElementById('app')) MS.boot();
-})(window.MS);
+(function(o){"use strict";o.boot=function(){o.Store.init();var n=o.Store.load("lang","fa");o.lang=n==="en"||n==="de"||n==="fa"?n:"fa",o.bind(),o.render(),o.cloud&&o.cloud.on&&o.cloud.boot()},typeof document!="undefined"&&document.getElementById("app")&&o.boot()})(window.MS);
